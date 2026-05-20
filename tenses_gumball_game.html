@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tense Gumball Machine</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #eeedfd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    #game {
+      width: 100vw;
+      min-height: 100vh;
+      min-height: 100dvh;
+      position: relative;
+      padding: 2vh 2vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* --- INTRO EKRANI --- */
+    #intro-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .game-title {
+      font-size: clamp(40px, 6vw, 80px);
+      font-weight: 800;
+      color: #5c3d8f;
+      text-align: center;
+      text-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      letter-spacing: 2px;
+    }
+
+    .game-subtitle {
+      font-size: clamp(16px, 2vw, 24px);
+      color: #5c3d8f;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+
+    /* --- OYUN EKRANI YERLEŞİMİ --- */
+    #play-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      min-height: 100%;
+      max-width: 1400px;
+    }
+
+    #score-bar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      width: 100%;
+      margin-bottom: 2vh;
+    }
+
+    .score-item {
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(8px);
+      padding: clamp(6px, 1.2vw, 10px) clamp(14px, 3vw, 30px);
+      border-radius: 30px;
+      font-size: clamp(13px, 2vw, 24px);
+      color: #333;
+      font-weight: 800;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+    }
+
+    #game-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      flex: 1;
+      gap: 3vw;
+      min-height: 0;
+    }
+
+    /* --- MAKİNE KISMI --- */
+    #machine-side {
+      width: 30%;
+      max-width: 350px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      align-self: flex-start;
+      position: relative;
+      margin-top: -8vh;
+      /* DAHA DA YUKARI TAŞIDIĞIMIZ KISIM BURASI */
+    }
+
+    .machine {
+      width: 100%;
+      height: 60vh;
+      max-height: 520px;
+      min-height: 260px;
+      background: url('machine.png') no-repeat center bottom;
+      background-size: contain;
+      position: relative;
+      filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.3));
+      transition: transform 0.2s;
+    }
+
+    .machine:hover {
+      transform: scale(1.02);
+    }
+
+    .machine-glass {
+      width: 82%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      position: absolute;
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 8%;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    .lever-btn {
+      margin-top: 1vh;
+      padding: clamp(10px, 1.6vw, 15px) clamp(24px, 4vw, 40px);
+      font-size: clamp(14px, 2vw, 24px);
+      font-weight: 800;
+      background: linear-gradient(-135deg, #ea6767, #ff7e5f);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      text-transform: uppercase;
+    }
+
+    .lever-btn:hover:not(:disabled) {
+      background: #444;
+      transform: translateY(-2px);
+    }
+
+    .lever-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #side-gum {
+      width: clamp(70px, 8vw, 120px);
+      height: clamp(70px, 8vw, 120px);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(16px, 2vw, 24px);
+      font-weight: 800;
+      color: white;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      cursor: pointer;
+      border: 6px solid rgba(255, 255, 255, 0.8);
+      box-shadow: inset -5px -5px 15px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.3);
+      animation: pulse 1s infinite alternate;
+      margin-top: 1vh;
+      /* Boşluğu kıstık */
+    }
+
+    #side-label {
+      font-size: 18px;
+      color: #fff;
+      margin-top: 5px;
+      /* Boşluğu kıstık */
+      font-weight: 600;
+    }
+
+    /* --- KAVANOZLAR KISMI --- */
+    #jars-side {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      gap: 2vw;
+      align-items: flex-end;
+      justify-content: space-around;
+    }
+
+    .jar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      max-width: 280px;
+    }
+
+    .jar-label {
+      font-size: clamp(12px, 1.5vw, 18px);
+      font-weight: 800;
+      background: #ea6767;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 12px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      white-space: nowrap;
+    }
+
+    .jar {
+      width: 100%;
+      height: 70vh;
+      max-height: 600px;
+      min-height: 220px;
+      background: url('jar_small2.png') no-repeat center bottom;
+      background-size: contain;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+      display: flex;
+      flex-direction: column-reverse;
+      padding: 5% 10% 12% 10%;
+
+    }
+
+    .jar:hover {
+      transform: translateY(-5px);
+    }
+
+    .jar-gums {
+      display: flex;
+      flex-wrap: wrap-reverse;
+      align-content: flex-start;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      padding-right: 25px;
+
+    }
+
+    .jar-gum {
+      width: 30%;
+      margin: 1.5%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(7px, 1vw, 14px);
+      color: white;
+      font-weight: 800;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+      padding: 2px;
+      box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.2), 1px 2px 4px rgba(0, 0, 0, 0.3);
+      word-break: keep-all;
+    }
+
+    .mini-gum {
+      width: clamp(10px, 1.5vw, 20px);
+      height: clamp(10px, 1.5vw, 20px);
+      border-radius: 50%;
+      box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .jar-count {
+      font-size: clamp(16px, 1.5vw, 22px);
+      color: #fff;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.3);
+      padding: 5px 20px;
+      border-radius: 20px;
+    }
+
+    /* --- BİLDİRİMLER VE BİTİŞ EKRANI --- */
+    #feedback {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(22px, 5vw, 40px);
+      font-weight: 800;
+      padding: clamp(12px, 2.5vw, 20px) clamp(24px, 6vw, 50px);
+      border-radius: 30px;
+      display: none;
+      z-index: 100;
+      pointer-events: none;
+      text-transform: uppercase;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    #feedback.wrong {
+      background: #ff4444;
+      color: white;
+      animation: pop 0.3s ease;
+    }
+
+    #feedback.correct {
+      background: #00C851;
+      color: white;
+      animation: pop 0.3s ease;
+    }
+
+    #end-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .end-trophy-spacer {
+      margin-bottom: 20px;
+    }
+
+    .end-title {
+      font-size: clamp(30px, 5vw, 60px);
+      font-weight: 800;
+      color: #ea6767;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .end-stats {
+      font-size: clamp(15px, 2.4vw, 24px);
+      color: #ea6767;
+      margin-bottom: 40px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.2);
+      padding: clamp(12px, 2.5vw, 20px) clamp(20px, 4vw, 40px);
+      border-radius: 20px;
+      line-height: 1.6;
+    }
+
+    .end-trophy {
+      font-size: clamp(60px, 12vw, 100px);
+    }
+
+    /* Animasyonlar */
+    @keyframes pulse {
+      from {
+        transform: scale(1);
+      }
+
+      to {
+        transform: scale(1.05);
+      }
+    }
+
+    @keyframes pop {
+      0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .gum-enter {
+      animation: fallIn 0.3s ease-out;
+    }
+
+    @keyframes fallIn {
+      from {
+        transform: translateY(-30px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* --- TABLET --- */
+    @media (max-width: 900px) {
+      #machine-side {
+        margin-top: 0;
+      }
+      .machine {
+        height: 45vh;
+      }
+      .jar {
+        height: 50vh;
+      }
+      #score-bar {
+        gap: 10px;
+      }
+    }
+
+    /* --- MOBİL (portre) --- */
+    @media (max-width: 640px) {
+      body {
+        overflow-y: auto;
+        align-items: flex-start;
+      }
+      #game {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 10px;
+        justify-content: flex-start;
+      }
+      #game-content {
+        flex-direction: column;
+        gap: 12px;
+      }
+      #machine-side {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+        align-self: center;
+      }
+      .machine {
+        height: 38vh;
+        min-height: 220px;
+      }
+      #jars-side {
+        width: 100%;
+        gap: 8px;
+      }
+      .jar-wrap {
+        gap: 8px;
+      }
+      .jar {
+        height: 32vh;
+        min-height: 180px;
+        padding: 5% 8% 12% 8%;
+      }
+      .jar-label {
+        font-size: 11px;
+        padding: 6px 4px;
+      }
+      .jar-count {
+        font-size: 13px;
+        padding: 3px 12px;
+      }
+      .jar-gum {
+        width: 28%;
+        margin: 1%;
+        font-size: 7px;
+      }
+      .jar-gums {
+        padding-right: 10px;
+      }
+      #side-gum {
+        width: 90px;
+        height: 90px;
+        font-size: 14px;
+        border-width: 4px;
+      }
+      .game-title {
+        font-size: clamp(28px, 8vw, 48px);
+      }
+      #intro-screen .machine {
+        width: 180px !important;
+        height: 240px !important;
+      }
+    }
+
+    /* --- ÇOK KÜÇÜK EKRANLAR --- */
+    @media (max-width: 380px) {
+      .jar-label {
+        font-size: 9px;
+        white-space: normal;
+        line-height: 1.1;
+      }
+      .score-item {
+        font-size: 12px;
+        padding: 5px 10px;
+      }
+    }
+
+    /* --- MOBİL YATAY (landscape) --- */
+    @media (max-height: 500px) and (orientation: landscape) {
+      #game {
+        padding: 5px 10px;
+      }
+      #machine-side {
+        margin-top: 0;
+        width: 22%;
+      }
+      .machine {
+        height: 55vh;
+        min-height: 180px;
+      }
+      .jar {
+        height: 60vh;
+        min-height: 160px;
+      }
+      #score-bar {
+        margin-bottom: 5px;
+      }
+      .score-item {
+        padding: 4px 14px;
+        font-size: 12px;
+      }
+      .game-title {
+        font-size: clamp(24px, 5vw, 40px);
+      }
+      #intro-screen .machine {
+        height: 50vh !important;
+        min-height: 150px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="game">
+    <div id="feedback"></div>
+
+    <div id="intro-screen">
+      <div class="game-title">🍬 Tense Gumball Machine</div>
+      <div class="game-subtitle">Sort the words into the correct tense jars!</div>
+      <div class="machine" style="width: clamp(180px, 40vw, 250px); height: clamp(240px, 50vw, 350px);">
+      </div>
+      <button class="lever-btn" onclick="startGame()" style="margin-top: 30px;">Start Game!</button>
+    </div>
+
+    <div id="play-screen">
+      <div id="score-bar">
+        <div class="score-item">Past: <span id="sc-past">0</span></div>
+        <div class="score-item">Present: <span id="sc-present">0</span></div>
+        <div class="score-item">Future: <span id="sc-future">0</span></div>
+      </div>
+
+      <div id="game-content">
+        <div id="machine-side">
+          <div class="machine">
+            <div class="machine-glass" id="play-glass"></div>
+          </div>
+          <button class="lever-btn" id="lever" onclick="dispenseBall()">Turn!</button>
+          <div id="side-gum" onclick="selectJar(null)"></div>
+          <div id="side-label" style="display:none;">Tap a jar ↓</div>
+        </div>
+
+        <div id="jars-side">
+          <div class="jar-wrap">
+            <div class="jar-label">🍭PAST TENSE🍭</div>
+            <div class="jar" id="jar-past" onclick="selectJar('past')">
+              <div class="jar-gums" id="gums-past"></div>
+            </div>
+          </div>
+          <div class="jar-wrap">
+            <div class="jar-label">🍭PRESENT TENSE🍭</div>
+            <div class="jar" id="jar-present" onclick="selectJar('present')">
+              <div class="jar-gums" id="gums-present"></div>
+            </div>
+          </div>
+          <div class="jar-wrap">
+            <div class="jar-label">🍭FUTURE TENSE🍭</div>
+            <div class="jar" id="jar-future" onclick="selectJar('future')">
+              <div class="jar-gums" id="gums-future"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="end-screen">
+      <div class="end-title">🎉 Amazing! </div>
+      <div class="end-title">🍬 You're a Tense Master!</div>
+      <div class="end-trophy end-trophy-spacer">🏆❣️</div>
+      <div class="end-stats" id="end-stats"></div>
+      <button class="lever-btn" onclick="resetGame()">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    const WORDS = {
+      past: [
+        'watched', 'went', 'played', 'ate', 'visited', 'spoke', 'bought', 'cooked', 'drank', 'traveled',
+        'studied', 'worked', 'cleaned', 'laughed', 'called', 'walked', 'danced', 'painted', 'fixed', 'opened',
+        'closed', 'helped', 'jumped', 'listened', 'learned', 'moved', 'organized', 'packed', 'rested', 'smiled',
+        'talked', 'used', 'washed', 'wrote', 'answered', 'arrived', 'borrowed', 'changed', 'decided', 'enjoyed',
+        'finished', 'gathered', 'improved', 'joined', 'kicked', 'looked', 'missed', 'needed', 'offered', 'pushed'
+      ],
+
+      present: [
+        'watches', 'goes', 'plays', 'eats', 'visits', 'speaks', 'buys', 'cooks', 'drinks', 'travels',
+        'studies', 'works', 'cleans', 'laughs', 'calls', 'walks', 'dances', 'paints', 'fixes', 'opens',
+        'closes', 'helps', 'jumps', 'listens', 'learns', 'moves', 'organizes', 'packs', 'rests', 'smiles',
+        'talks', 'uses', 'washes', 'writes', 'answers', 'arrives', 'borrows', 'changes', 'decides', 'enjoys',
+        'finishes', 'gathers', 'improves', 'joins', 'kicks', 'looks', 'misses', 'needs', 'offers', 'pushes'
+      ],
+
+      future: [
+        'will watch', 'will go', 'will play', 'will eat', 'will visit', 'will speak', 'will buy', 'will cook', 'will drink', 'will travel',
+        'will study', 'will work', 'will clean', 'will laugh', 'will call', 'will walk', 'will dance', 'will paint', 'will fix', 'will open',
+        'will close', 'will help', 'will jump', 'will listen', 'will learn', 'will move', 'will organize', 'will pack', 'will rest', 'will smile',
+        'will talk', 'will use', 'will wash', 'will write', 'will answer', 'will arrive', 'will borrow', 'will change', 'will decide', 'will enjoy',
+        'will finish', 'will gather', 'will improve', 'will join', 'will kick', 'will look', 'will miss', 'will need', 'will offer', 'will push'
+      ]
+    };
+
+    const COLORS = [
+      '#FF8FAB', '#FFB347', '#FFD93D', '#6BCB77', '#4D96FF',
+      '#B983FF', '#FF6F91', '#FF9671', '#FFC75F', '#F9F871',
+      '#00C9A7', '#00B8D9', '#5F6CAF', '#C34A36', '#845EC2',
+      '#FF8066', '#FF5D8F', '#F67280', '#C06C84', '#6C5CE7',
+      '#00CEC9', '#55EFC4', '#81ECEC', '#74B9FF', '#A29BFE',
+      '#FD79A8', '#E17055', '#FAB1A0', '#FFEAA7', '#B8E994',
+      '#D980FA', '#FDA7DF', '#F6E58D', '#7ED6DF', '#22A6B3',
+      '#E056FD', '#686DE0', '#30336B', '#95A5A6', '#F8A5C2',
+      '#F78FB3', '#778BEB', '#E77F67', '#CF6A87', '#63CDD7'
+    ];
+    let pool = [], scores = { past: 0, present: 0, future: 0 }, currentBall = null, startTime = 0, wrongCount = 0, gameActive = false;
+
+    function buildPool() {
+      const MIN = 15, MAX = 20, MAX_DIFF = 4;
+
+      // 1. Her bir zaman için (past, present, future) 10 ile 20 arasında rastgele bir sayı belirle
+      const counts = {
+        past:    Math.floor(Math.random() * (MAX - MIN + 1)) + MIN,
+        present: Math.floor(Math.random() * (MAX - MIN + 1)) + MIN,
+        future:  Math.floor(Math.random() * (MAX - MIN + 1)) + MIN
+      };
+
+      const buckets = {};
+      ['past', 'present', 'future'].forEach(t => {
+        const words = shuffle([...WORDS[t]]);
+        buckets[t] = words.slice(0, counts[t]).map(w => ({ word: w, tense: t }));
+      });
+
+      const result = [];
+      const seen = { past: 0, present: 0, future: 0 };
+      const tenses = ['past', 'present', 'future'];
+
+      while (tenses.some(t => buckets[t].length > 0)) {
+        const available = tenses.filter(t => {
+          if (buckets[t].length === 0) return false;
+          const othersRemaining = tenses.filter(o => o !== t).map(o => buckets[o].length);
+          const maxOther = Math.max(...othersRemaining);
+          return seen[t] - Math.min(...tenses.filter(o => o !== t).map(o => seen[o])) < MAX_DIFF || maxOther === 0;
+        });
+
+        const candidates = available.length > 0 ? available : tenses.filter(t => buckets[t].length > 0);
+
+        const weights = candidates.map(t => {
+          const minSeen = Math.min(...tenses.map(o => seen[o]));
+          return Math.max(1, MAX_DIFF - (seen[t] - minSeen));
+        });
+        const totalW = weights.reduce((a, b) => a + b, 0);
+        let r = Math.random() * totalW;
+        let chosen = candidates[candidates.length - 1];
+        for (let i = 0; i < candidates.length; i++) {
+          r -= weights[i];
+          if (r <= 0) { chosen = candidates[i]; break; }
+        }
+
+        result.push(buckets[chosen].pop());
+        seen[chosen]++;
+      }
+
+      return result.reverse();
+    }
+
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function randColor() { return COLORS[Math.floor(Math.random() * COLORS.length)]; }
+
+    function fillGlass(id) {
+      const g = document.getElementById(id);
+      g.innerHTML = '';
+      for (let i = 0; i < 30; i++) {
+        const d = document.createElement('div');
+        d.className = 'mini-gum';
+        d.style.background = randColor();
+        g.appendChild(d);
+      }
+    }
+
+    function startGame() {
+      document.getElementById('intro-screen').style.display = 'none';
+      document.getElementById('play-screen').style.display = 'flex';
+
+      pool = buildPool();
+      scores = { past: 0, present: 0, future: 0 };
+      wrongCount = 0;
+      startTime = Date.now();
+      gameActive = true;
+      updateScores();
+    }
+
+    function dispenseBall() {
+      if (!gameActive || currentBall) return;
+      if (pool.length === 0) { checkEnd(); return; }
+
+      const glass = document.getElementById('play-glass');
+      if (glass.lastChild) glass.removeChild(glass.lastChild);
+
+      const ball = pool.pop();
+      currentBall = ball;
+      currentBall.color = randColor();
+
+      const sg = document.getElementById('side-gum');
+      sg.style.background = currentBall.color;
+      sg.textContent = ball.word;
+      sg.style.display = 'flex';
+      document.getElementById('side-label').style.display = 'block';
+      document.getElementById('lever').disabled = true;
+    }
+
+    function selectJar(tense) {
+      if (!currentBall || !gameActive || tense === null) return;
+
+      if (tense === currentBall.tense) {
+        showFeedback('correct', '✓ CORRECT!');
+        addToJar(tense, currentBall.word, currentBall.color);
+        scores[tense]++;
+        updateScores();
+        hideSideGum();
+        checkEnd();
+      } else {
+        wrongCount++;
+        showFeedback('wrong', '✗ WRONG!');
+        shakeJar(tense);
+      }
+    }
+
+    function addToJar(tense, word, color) {
+      const container = document.getElementById('gums-' + tense);
+      const gum = document.createElement('div');
+      gum.className = 'jar-gum gum-enter';
+      gum.style.background = color;
+      gum.textContent = word;
+      container.appendChild(gum);
+    }
+
+    function hideSideGum() {
+      document.getElementById('side-gum').style.display = 'none';
+      document.getElementById('side-label').style.display = 'none';
+      currentBall = null;
+      document.getElementById('lever').disabled = false;
+    }
+
+    function updateScores() {
+      ['past', 'present', 'future'].forEach(t => {
+        document.getElementById('sc-' + t).textContent = scores[t];
+      });
+    }
+
+    function checkEnd() {
+      if (scores.past >= 10 && scores.present >= 10 && scores.future >= 10) {
+        gameActive = false;
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        const mins = Math.floor(elapsed / 60), secs = elapsed % 60;
+        setTimeout(() => {
+          document.getElementById('play-screen').style.display = 'none';
+          const es = document.getElementById('end-screen');
+          es.style.display = 'flex';
+          document.getElementById('end-stats').innerHTML =
+            `⏱ Time: ${mins}m ${secs}s<br>❌ Wrong Answers: ${wrongCount}<br>🎯 Accuracy: ${Math.round(30 / (30 + wrongCount) * 100)}%`;
+        }, 600);
+      }
+    }
+
+    function shakeJar(tense) {
+      const j = document.getElementById('jar-' + tense);
+      j.style.transform = 'translateX(-10px)';
+      setTimeout(() => j.style.transform = 'translateX(10px)', 80);
+      setTimeout(() => j.style.transform = 'translateX(-5px)', 160);
+      setTimeout(() => j.style.transform = 'translateX(5px)', 240);
+      setTimeout(() => j.style.transform = 'translateX(0)', 320);
+    }
+
+    function showFeedback(type, msg) {
+      const fb = document.getElementById('feedback');
+      fb.className = type;
+      fb.textContent = msg;
+      fb.style.display = 'block';
+      setTimeout(() => fb.style.display = 'none', 900);
+    }
+
+    function resetGame() {
+      document.getElementById('end-screen').style.display = 'none';
+      ['past', 'present', 'future'].forEach(t => { document.getElementById('gums-' + t).innerHTML = ''; });
+      startGame();
+    }
+  </script>
+</body>
+
+</html>
